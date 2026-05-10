@@ -34,7 +34,7 @@ namespace Курсова_1_курс
             {
                 for (int j = i + 1; j < VerticesCount; j++)
                 {
-                    if (adjacencyMatrix[i, j] > 0)
+                    if (adjacencyMatrix[i, j] != 0)
                         edges.Add(new Edge { U = i, V = j, Weight = adjacencyMatrix[i, j] });
                 }
             }

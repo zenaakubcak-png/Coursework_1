@@ -112,7 +112,7 @@ namespace Курсова_1_курс
                 {
                     iterations++;
                     double weight = graph[u, v]; // Змінено на double
-                    if (weight > 0 && !inMST[v] && weight < minWeight[v])
+                    if (weight != 0 && !inMST[v] && weight < minWeight[v])
                     {
                         parent[v] = u;
                         minWeight[v] = weight;

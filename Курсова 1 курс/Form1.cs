@@ -111,8 +111,16 @@ namespace Курсова_1_курс
         {
             try
             {
-                ReadGraphFromGrid(); // Зчитуємо матрицю суміжності
-                // Використання оператора 'is' для перевірки типу
+                ReadGraphFromGrid();
+                if (currentGraph.GetAllEdges().Count == 0)
+                {
+                    MessageBox.Show(
+                        "Граф не містить жодного ребра!\nВведіть хоча б одне ненульове значення у матрицю.",
+                        "Порожній граф",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning);
+                    return;
+                }
                 if (cmbMethod.SelectedItem is MstAlgorithm selectedAlgorithm)
                 {
                     // Використання оператора 'as' для безпечного приведення типів
@@ -143,6 +151,8 @@ namespace Курсова_1_курс
         private void dgvMatrix_CellValidating(object sender, DataGridViewCellValidatingEventArgs e)
         {
             string input = e.FormattedValue?.ToString();
+            if (input != null)
+                input = input.Replace('.', ',');
 
             if (string.IsNullOrWhiteSpace(input))
                 return;
