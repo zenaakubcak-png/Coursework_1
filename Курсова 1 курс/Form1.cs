@@ -10,9 +10,10 @@ namespace Курсова_1_курс
         private Graph currentGraph;
         private List<Edge> mstEdges;
         private MstAlgorithm solver;
+        private bool _hasResult = false;
         public Form1()
         {
-            // Це стандартний метод, який малює кнопки.
+            
             InitializeComponent();
             InitializeUI();
         }
@@ -20,7 +21,7 @@ namespace Курсова_1_курс
         {
             dgvMatrix.EditingControlShowing += dgvMatrix_EditingControlShowing;
             dgvMatrix.CellValidating += dgvMatrix_CellValidating;
-            // Налаштування ComboBox.
+            
             cmbMethod.Items.Clear();
             cmbMethod.Items.Add(new KruskalAlgorithm());
             cmbMethod.Items.Add(new PrimAlgorithm());
@@ -30,30 +31,26 @@ namespace Курсова_1_курс
             cmbMethod.SelectedIndex = 0;
             dgvMatrix.CellValidating += dgvMatrix_CellValidating;
 
-            // --- НОВІ НАЛАШТУВАННЯ ДЛЯ DataGridView ---
-
-            // 1. Увімкнення подвійної буферизації для плавного скролінгу (рефлексія)
+            
             typeof(DataGridView).InvokeMember("DoubleBuffered",
                 System.Reflection.BindingFlags.NonPublic |
                 System.Reflection.BindingFlags.Instance |
                 System.Reflection.BindingFlags.SetProperty,
                 null, dgvMatrix, new object[] { true });
 
-            // 2. Прибираємо зайве
-            dgvMatrix.AllowUserToAddRows = false;       // Забирає порожній сірий рядок знизу
+            dgvMatrix.AllowUserToAddRows = false;       
             dgvMatrix.AllowUserToDeleteRows = false;
             dgvMatrix.AllowUserToResizeRows = false;
             dgvMatrix.AllowUserToResizeColumns = false;
-            dgvMatrix.RowHeadersVisible = true;         // Показувати бокові підписи
-            dgvMatrix.ColumnHeadersVisible = true;      // Показувати верхні підписи
+            dgvMatrix.RowHeadersVisible = true;         
+            dgvMatrix.ColumnHeadersVisible = true;      
 
-            // 3. Косметичні покращення
-            dgvMatrix.BackgroundColor = Color.White;    // Білий фон замість сірого
+            dgvMatrix.BackgroundColor = Color.White;    
             dgvMatrix.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None;
-            dgvMatrix.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter; // Текст по центру клітинок
+            dgvMatrix.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter; 
             dgvMatrix.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
 
-            // Ініціалізуємо базову матрицю 5x5
+            
             UpdateMatrixHeaders(5);
             nudGraphSize.Minimum = 2;
             nudGraphSize.Maximum = 20;
@@ -64,7 +61,7 @@ namespace Курсова_1_курс
         {
             if (e.Control is TextBox tb)
             {
-                tb.KeyPress -= TextBox_KeyPress; // Запобігаємо дублюванню
+                tb.KeyPress -= TextBox_KeyPress; 
                 tb.KeyPress += TextBox_KeyPress;
             }
         }
@@ -73,7 +70,7 @@ namespace Курсова_1_курс
         {
             if (e.KeyChar == '.')
             {
-                e.KeyChar = ','; // Миттєво замінюємо крапку на кому
+                e.KeyChar = ','; 
                 e.Handled = true;
                 TextBox tb = sender as TextBox;
                 int pos = tb.SelectionStart;
@@ -86,27 +83,23 @@ namespace Курсова_1_курс
             dgvMatrix.RowCount = size;
             dgvMatrix.ColumnCount = size;
 
-            int cellSize = 30; // Ідеальний розмір для квадратної клітинки
+            int cellSize = 30; 
 
             for (int i = 0; i < size; i++)
             {
                 string headerName = ((char)('A' + i)).ToString();
 
-                // Налаштовуємо стовпці (верхні підписи)
                 dgvMatrix.Columns[i].HeaderText = headerName;
-                dgvMatrix.Columns[i].Width = cellSize; // Фіксуємо ширину
-                dgvMatrix.Columns[i].SortMode = DataGridViewColumnSortMode.NotSortable; // Забороняємо сортування по кліку
+                dgvMatrix.Columns[i].Width = cellSize; 
+                dgvMatrix.Columns[i].SortMode = DataGridViewColumnSortMode.NotSortable; 
 
-                // Налаштовуємо рядки (бокові підписи)
                 dgvMatrix.Rows[i].HeaderCell.Value = headerName;
-                dgvMatrix.Rows[i].Height = cellSize; // Фіксуємо висоту
+                dgvMatrix.Rows[i].Height = cellSize; 
             }
 
-            // Автоматично підганяємо ширину бокового стовпця з літерами
             dgvMatrix.RowHeadersWidthSizeMode = DataGridViewRowHeadersWidthSizeMode.AutoSizeToAllHeaders;
         }
 
-        // Натискання на кнопку "Розрахувати"
         private void btnCalculate_Click(object sender, EventArgs e)
         {
             try
@@ -123,17 +116,18 @@ namespace Курсова_1_курс
                 }
                 if (cmbMethod.SelectedItem is MstAlgorithm selectedAlgorithm)
                 {
-                    // Використання оператора 'as' для безпечного приведення типів
+                    
                     solver = selectedAlgorithm as MstAlgorithm;
 
-                    // ОСЬ ТУТ ЗМІНЕНО: out double weight замість out int weight
+                    
                     mstEdges = solver.FindMST(currentGraph, out double weight, out int iters);
 
                     lblResult.Text = $"Метод: {solver.Name}\nВага: {weight}\nІтерацій: {iters}";
+                    _hasResult = true;
                     DrawGraph();
                     SaveResultsToFile(solver.Name, weight, iters);
                 }
-                else // Якщо вибрано рядок "Бенчмаркінг", а не об'єкт класу
+                else 
                 {
                     RunBenchmark();
                 }
@@ -172,12 +166,8 @@ namespace Курсова_1_курс
                 return;
             }
 
-            // --- НОВА ПЕРЕВІРКА НА КІЛЬКІСТЬ ЗНАКІВ ---
-            // Використовуємо decimal для уникнення бінарних похибок (наприклад, коли 2.3 у пам'яті стає 2.29999999)
             decimal decValue = (decimal)value;
 
-            // Якщо округлене до 2 знаків число не дорівнює введеному оригіналу, отже, знаків було більше!
-            // (Якщо захочеш 3 знаки — просто зміни цифру 2 на 3 у дужках нижче)
             if (Math.Round(decValue, 2) != decValue)
             {
                 e.Cancel = true;
@@ -185,9 +175,7 @@ namespace Курсова_1_курс
                                 "Помилка вводу", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
-            // ------------------------------------------
-
-            // Змінюємо мінімальний ліміт на 0.01 (бо 0.001 тепер не пройде перевірку вище)
+            
             if (value != 0 && Math.Abs(value) < 0.01)
             {
                 e.Cancel = true;
@@ -215,7 +203,7 @@ namespace Курсова_1_курс
                     var cellValue = dgvMatrix.Rows[i].Cells[j].Value;
                     if (cellValue != null && !string.IsNullOrWhiteSpace(cellValue.ToString()))
                     {
-                        // ТРЮК: Нормалізуємо текст перед зчитуванням
+                        
                         string normalizedString = cellValue.ToString().Replace(',', '.');
 
                         if (double.TryParse(normalizedString,
@@ -234,12 +222,10 @@ namespace Курсова_1_курс
         private void RunBenchmark()
         {
             string report = "=== Бенчмаркінг ===\n";
-            // Поліморфізм: масив базового типу зберігає об'єкти спадкоємців
             MstAlgorithm[] algorithms = { new PrimAlgorithm(), new KruskalAlgorithm(), new BoruvkaAlgorithm() };
 
             foreach (var alg in algorithms)
             {
-                // ОСЬ ТУТ ЗМІНЕНО: out double w замість out int w
                 var edges = alg.FindMST(currentGraph, out double w, out int iters);
                 report += $"{alg.Name}: Вага = {w}, Ітерацій = {iters}\n";
                 mstEdges = edges; // Залишаємо останнє дерево для відображення
@@ -247,6 +233,7 @@ namespace Курсова_1_курс
 
             lblResult.Text = report;
             DrawGraph();
+            _hasResult = true;
         }
 
         private void DrawGraph()
@@ -265,14 +252,12 @@ namespace Курсова_1_курс
                 int cy = pictureBox.Height / 2;
                 int radius = Math.Min(cx, cy) - 30;
 
-                // Розставляємо вершини по колу
                 for (int i = 0; i < n; i++)
                 {
                     double angle = 2 * Math.PI * i / n;
                     positions[i] = new Point((int)(cx + radius * Math.Cos(angle)), (int)(cy + radius * Math.Sin(angle)));
                 }
 
-                // Малюємо всі ребра (сірі)
                 var allEdges = currentGraph.GetAllEdges();
                 Pen grayPen = new Pen(Color.LightGray, 2);
                 foreach (var edge in allEdges)
@@ -280,7 +265,6 @@ namespace Курсова_1_курс
                     g.DrawLine(grayPen, positions[edge.U], positions[edge.V]);
                 }
 
-                // Малюємо ребра дерева (зелені)
                 if (mstEdges != null)
                 {
                     Pen greenPen = new Pen(Color.Green, 3);
@@ -290,7 +274,6 @@ namespace Курсова_1_курс
                     }
                 }
 
-                // Малюємо вузли
                 Font font = new Font("Arial", 12, FontStyle.Bold);
                 for (int i = 0; i < n; i++)
                 {
@@ -305,7 +288,6 @@ namespace Курсова_1_курс
 
         private void SaveResultsToFile(string method, double weight, int iterations)
         {
-            // Формуємо запис. У консолі чи файлі зразу видно, чия це робота.
             using (StreamWriter sw = new StreamWriter(Constants.DefaultExportFileName, true))
             {
                 sw.WriteLine($"[{DateTime.Now}] Розробив: Євген Якубчак, група ІП-55.");
@@ -325,7 +307,6 @@ namespace Курсова_1_курс
             // Обмежуємо розмір графа, щоб уникнути помилок
             if (newSize > 0 && newSize <= Constants.MaxVertices)
             {
-                // Викликаємо наш новий метод замість прямого задавання RowCount/ColumnCount
                 UpdateMatrixHeaders(newSize);
             }
         }
@@ -337,10 +318,13 @@ namespace Курсова_1_курс
 
         private void btnSave_Click(object sender, EventArgs e)
         {
-            // Перевіряємо, чи є що зберігати
-            if (string.IsNullOrWhiteSpace(lblResult.Text) || lblResult.Text.Contains("результат"))
+            if (!_hasResult)
             {
-                MessageBox.Show("Спочатку розрахуйте остовне дерево!", "Увага", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show(
+                    "Спочатку розрахуйте остовне дерево!",
+                    "Увага",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
                 return;
             }
 
@@ -352,11 +336,19 @@ namespace Курсова_1_курс
                     sw.WriteLine(lblResult.Text);
                     sw.WriteLine(new string('-', 40));
                 }
-                MessageBox.Show($"Дані успішно збережено у файл {Constants.DefaultExportFileName}", "Готово", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show(
+                    $"Дані успішно збережено у файл {Constants.DefaultExportFileName}",
+                    "Готово",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Помилка при збереженні файлу: " + ex.Message, "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(
+                    "Помилка при збереженні файлу: " + ex.Message,
+                    "Помилка",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
             }
         }
     }
